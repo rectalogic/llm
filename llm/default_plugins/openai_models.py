@@ -5,6 +5,10 @@ import click
 import datetime
 import httpx
 import openai
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+    Function,
+)
 import os
 
 try:
@@ -19,6 +23,7 @@ except ImportError:
 from typing import List, Iterable, Iterator, Optional, Union
 import json
 import yaml
+from ..tool import format_error
 
 
 @hookimpl
@@ -287,6 +292,60 @@ class Chat(Model):
     def __str__(self):
         return "OpenAI Chat: {}".format(self.model_id)
 
+    def _run_completion(self, client, response, stream, kwargs, messages):
+        if stream:
+            completion = client.chat.completions.create(
+                model=self.model_name or self.model_id,
+                messages=messages,
+                stream=True,
+                **kwargs,
+            )
+            chunks = []
+            tool_calls = []
+            for chunk in completion:
+                chunks.append(chunk)
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    yield delta.content, None
+                if delta.tool_calls:
+                    for tcchunk in delta.tool_calls:
+                        if len(tool_calls) <= tcchunk.index:
+                            tool_calls.append(
+                                ChatCompletionMessageToolCall(
+                                    id="",
+                                    type="function",
+                                    function=Function(arguments="", name=""),
+                                )
+                            )
+                        tc = tool_calls[tcchunk.index]
+                        if tcchunk.id:
+                            tc.id += tcchunk.id
+                        if tcchunk.function.name:
+                            tc.function.name += tcchunk.function.name
+                        if tcchunk.function.arguments:
+                            tc.function.arguments += tcchunk.function.arguments
+
+            response_json = remove_dict_none_values(combine_chunks(chunks, tool_calls))
+            if tool_calls:
+                yield None, tool_calls
+        else:
+            completion = client.chat.completions.create(
+                model=self.model_name or self.model_id,
+                messages=messages,
+                stream=False,
+                **kwargs,
+            )
+            response_json = remove_dict_none_values(completion.model_dump())
+            message = completion.choices[0].message
+            yield message.content, message.tool_calls
+
+        if response.response_json is None:
+            response.response_json = response_json
+        elif isinstance(response.response_json, list):
+            response.response_json.append(response_json)
+        else:
+            response.response_json = [response.response_json, response_json]
+
     def execute(self, prompt, stream, response, conversation=None):
         messages = []
         if prompt.system and not self.allows_system_prompt:
@@ -312,29 +371,43 @@ class Chat(Model):
         response._prompt_json = {"messages": messages}
         kwargs = self.build_kwargs(prompt)
         client = self.get_client()
-        if stream:
-            completion = client.chat.completions.create(
-                model=self.model_name or self.model_id,
-                messages=messages,
-                stream=True,
-                **kwargs,
-            )
-            chunks = []
-            for chunk in completion:
-                chunks.append(chunk)
-                content = chunk.choices[0].delta.content
+
+        tool_messages = []
+        for content, tool_calls in self._run_completion(
+            client, response, stream, kwargs, messages
+        ):
+            if content is not None:
+                yield content
+            if tool_calls:
+                tool_messages.append(
+                    {
+                        "role": "assistant",
+                        "tool_calls": [tc.model_dump() for tc in tool_calls],
+                    }
+                )
+                for tool_call in tool_calls:
+                    tool = self.tools.get(tool_call.function.name)
+                    if not tool:
+                        tool_response = format_error(
+                            f"Attempt to call non-existent function '{tool_call.function.name}'"
+                        )
+                    else:
+                        tool_response = tool.safe_call(tool_call.function.arguments)
+                    tool_messages.append(
+                        {
+                            "role": "tool",
+                            "content": tool_response,
+                            "tool_call_id": tool_call.id,
+                        }
+                    )
+
+        if tool_messages:
+            messages.extend(tool_messages)
+            for content, _ in self._run_completion(
+                client, response, stream, kwargs, messages
+            ):
                 if content is not None:
                     yield content
-            response.response_json = remove_dict_none_values(combine_chunks(chunks))
-        else:
-            completion = client.chat.completions.create(
-                model=self.model_name or self.model_id,
-                messages=messages,
-                stream=False,
-                **kwargs,
-            )
-            response.response_json = remove_dict_none_values(completion.model_dump())
-            yield completion.choices[0].message.content
 
     def get_client(self):
         kwargs = {}
@@ -365,6 +438,8 @@ class Chat(Model):
             kwargs["max_tokens"] = self.default_max_tokens
         if json_object:
             kwargs["response_format"] = {"type": "json_object"}
+        if self.tools:
+            kwargs["tools"] = [tool.schema for tool in self.tools.values()]
         return kwargs
 
 
@@ -428,7 +503,7 @@ def not_nulls(data) -> dict:
     return {key: value for key, value in data if value is not None}
 
 
-def combine_chunks(chunks: List) -> dict:
+def combine_chunks(chunks: List, tool_calls: Optional[List] = None) -> dict:
     content = ""
     role = None
     finish_reason = None
@@ -463,6 +538,8 @@ def combine_chunks(chunks: List) -> dict:
     }
     if logprobs:
         combined["logprobs"] = logprobs
+    if tool_calls:
+        combined["tool_calls"] = [tc.model_dump() for tc in tool_calls]
     for key in ("id", "object", "model", "created", "index"):
         value = getattr(chunks[0], key, None)
         if value is not None:
