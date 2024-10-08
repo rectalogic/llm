@@ -64,7 +64,7 @@ module = [
     "click_default_group.*",
     "sqlite_migrate.*",
 ]
-disallow_untyped_defs = true
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 filterwarnings = [
