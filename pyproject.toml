@@ -47,7 +47,6 @@ llm = "llm.cli:cli"
 dev-dependencies = [
     "cogapp",
     "mypy>=1.10.0",
-    "black>=24.1.0",
     "numpy",
     "pytest",
     "pytest-httpx",
@@ -56,11 +55,8 @@ dev-dependencies = [
     "types-PyYAML",
 ]
 
-[tool.black]
-line-length = 160
-
 [tool.ruff]
-line-length = 160
+line-length = 88
 
 [[tool.mypy.overrides]]
 module = [
