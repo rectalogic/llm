@@ -13,7 +13,7 @@
 @lint:
   echo "Linters..."
   echo "  Black"
-  uv run black --check .
+  uv run ruff format --check .
   echo "  cog"
   uv run cog --check \
     -p "import sys, os; sys._called_from_test=True; os.environ['LLM_USER_PATH'] = '/tmp'" \
@@ -38,12 +38,12 @@
 
 # Apply Black
 @black:
-  uv run black .
+  uv run ruff format .
 
 # Run automatic fixes
 @fix: cog
   uv run ruff check . --fix
-  uv run black .
+  uv run ruff format .
 
 # Push commit if tests pass
 @push: test lint
