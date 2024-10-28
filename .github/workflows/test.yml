@@ -32,7 +32,8 @@ jobs:
         uv pip install 'pydantic${{ matrix.pydantic }}'
     - name: Run tests
       run: |
-        uv run pytest -v
+        uv -v run python --version
+        uv -v run pytest -v
     - name: Check if cog needs to be run
       if: matrix.os != 'windows-latest'
       run: |
