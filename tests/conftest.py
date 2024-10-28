@@ -8,10 +8,10 @@ from pytest_httpx import IteratorStream
 from typing import Optional
 
 
-def pytest_configure(config):
-    import sys
-
-    sys._called_from_test = True
+#def pytest_configure(config):
+#    import sys
+#
+#    sys._called_from_test = True
 
 
 @pytest.fixture
