@@ -33,7 +33,8 @@ jobs:
     - name: Run tests
       run: |
         #uv -v run python -X dev -m pytest
-        uv -v run python -v -m pytest --help
+        #uv -v run python -v -m pytest --help
+        .venv/bin/python -v -m pytest --help
     - name: Check if cog needs to be run
       if: matrix.os != 'windows-latest'
       run: |
