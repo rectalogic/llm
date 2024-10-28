@@ -29,11 +29,11 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        uv sync --dev --python ${{ matrix.python-version }} --python-preference only-system
+        uv sync --dev --python ${{ matrix.python-version }} #--python-preference only-system
         # uv pip install 'pydantic${{ matrix.pydantic }}'
     - name: Run tests
       run: |
-        uv -v run python -X dev -X faulthandler -m pytest
+        uv -v run python -X dev -m pytest
     - name: Check if cog needs to be run
       if: matrix.os != 'windows-latest'
       run: |
