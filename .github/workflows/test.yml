@@ -53,4 +53,4 @@ jobs:
       if: matrix.os != 'windows-latest'
       run: |
         uv pip install llm-cluster llm-mistral
-        ./tests/test-llm-load-plugins.sh
+        uv run ./tests/test-llm-load-plugins.sh
