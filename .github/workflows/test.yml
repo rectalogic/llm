@@ -25,7 +25,7 @@ jobs:
         cache-dependency-glob: "uv.lock"
     - name: Install dependencies
       run: |
-        uv sync --dev --python ${{ matrix.python-version }}
+        PYTHONMALLOC=debug uv sync --dev --python ${{ matrix.python-version }}
         # uv pip install 'pydantic${{ matrix.pydantic }}'
     - name: Run tests
       run: |
