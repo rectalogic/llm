@@ -51,7 +51,6 @@ dev-dependencies = [
     "pytest",
     "pytest-httpx",
     "ruff",
-    "types-click",
     "types-PyYAML",
 ]
 

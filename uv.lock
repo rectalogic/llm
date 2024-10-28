@@ -249,7 +249,6 @@ dev = [
     { name = "pytest" },
     { name = "pytest-httpx" },
     { name = "ruff" },
-    { name = "types-click" },
     { name = "types-pyyaml" },
 ]
 
@@ -277,7 +276,6 @@ dev = [
     { name = "pytest" },
     { name = "pytest-httpx" },
     { name = "ruff" },
-    { name = "types-click" },
     { name = "types-pyyaml" },
 ]
 
@@ -759,15 +757,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e9/34/bef135b27fe1864993a5284ad001157ee9b5538e859ac90f5b0e8cc8c9ec/tqdm-4.66.6.tar.gz", hash = "sha256:4bdd694238bef1485ce839d67967ab50af8f9272aab687c0d7702a01da0be090", size = 169533 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/41/73/02342de9c2d20922115f787e101527b831c0cffd2105c946c4a4826bcfd4/tqdm-4.66.6-py3-none-any.whl", hash = "sha256:223e8b5359c2efc4b30555531f09e9f2f3589bcd7fdd389271191031b49b7a63", size = 78326 },
-]
-
-[[package]]
-name = "types-click"
-version = "7.1.8"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/00/ff/0e6a56108d45c80c61cdd4743312d0304d8192482aea4cce96c554aaa90d/types-click-7.1.8.tar.gz", hash = "sha256:b6604968be6401dc516311ca50708a0a28baa7a0cb840efd7412f0dbbff4e092", size = 10015 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ee/ad/607454a5f991c5b3e14693a7113926758f889138371058a5f72f567fa131/types_click-7.1.8-py3-none-any.whl", hash = "sha256:8cb030a669e2e927461be9827375f83c16b8178c365852c060a34e24871e7e81", size = 12929 },
 ]
 
 [[package]]
