@@ -5,6 +5,9 @@ on: [push, pull_request]
 permissions:
   contents: read
 
+env:
+  PYTHONMALLOC: 'debug'
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -29,7 +32,6 @@ jobs:
         # uv pip install 'pydantic${{ matrix.pydantic }}'
     - name: Run tests
       run: |
-        export PYTHONMALLOC=debug
         uv -v run python -X dev -m pytest
     - name: Check if cog needs to be run
       if: matrix.os != 'windows-latest'
